@@ -5,8 +5,9 @@ const app ={
     urlUsers    :   "https://jsonplaceholder.typicode.com/users",
 
     userId      :   "",
+    palabraClave : "",
 
-    cargarPost : function(){
+    cargarPost : async function(){
         /*const contenido = document.querySelector("#content");
         contenido.style.width = "100%";
         contenido.classList.add(["mx-auto"], ["mt-5"]);*/
@@ -15,21 +16,31 @@ const app ={
         contenido.css("width","100%");
         contenido.addClass("mx-auto mt-5");
         let html = "";
-        console.info(this.userId);
+
         let urlaux = "";
         if(this.userId !== ""){
             urlaux = "?userId=" + this.userId;
         }
+
         console.info(urlaux);
+        
+        let r = await fetch(this.urlUsers+"/"+this.userId)
+            .then(resp => resp.json())
+            .catch(err => console.error( err ));
+        //console.table(r);
+
+
         fetch(this.urlPosts+urlaux)
             .then( response => response.json())
             .then( posts => {
                 for(let post of posts){
+                    let autor = (typeof r[post.userId-1] !== "undefined") ? r[post.userId-1].name : r.name;
+                    if(post.body.indexOf(this.palabraClave) !== -1){
                     html += `
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">${ post.title }</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">Autor | Fecha</h6>
+                            <h6 class="card-subtitle mb-2 text-muted">${ autor } | Fecha</h6>
                             <p class="card-text">${ post.body }</p>
                             <div class="card-footer" text-muted>
                                 <button type="button" class="btn btn-link" id="btn-ver-com${ post.id }" onclick="app.cargarComent
@@ -56,6 +67,7 @@ const app ={
                   </div>
                     `
                 }
+            }
                 //contenido.innerHTML = html;
                 contenido.html(html);
             } ).catch(err => console.error("!!Error :" + err));
@@ -89,7 +101,8 @@ const app ={
         const listaCom = $("#comments"+pid);
         $("#cargando"+pid).toggleClass("d-md-none", false);
 
-        console.log(this.urlComments+"?postId="+pid)
+        //console.log(this.urlComments+"?postId="+pid)
+        
         fetch(this.urlComments+"?postId="+pid)
             .then( response => response.json())
             .then( comentarios => {
@@ -117,6 +130,13 @@ const app ={
         $("#btn-cer-com"+pid).toggleClass("d-md-none",true);
         $("#btn-ver-com"+pid).toggleClass("d-md-none",false);
     },
+    buscarPalabra : function(){
+        $("#up"+this.userId).removeClass("active");
+        this.userId = "";
+        this.palabraClave = $("#buscar-palabra").val();
+        console.info(this.palabraClave);
+        this.cargarPost();
+    }
 }
 
 
